@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gemini Study Buddy</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>📚 Gemini Study Buddy</h1>
+      <p>Your AI-powered learning assistant</p>
+    </header>
+
+    <main>
+      <div class="chat-container">
+        <div id="messages" class="messages">
+          <div class="message system">
+            <div class="message-content">
+              Welcome! I'm your study buddy. Ask me anything about your studies.
+            </div>
+          </div>
+        </div>
+
+        <div class="input-container">
+          <form id="chat-form">
+            <input
+              type="text"
+              id="user-input"
+              placeholder="Ask a question..."
+              autocomplete="off"
+            />
+            <button type="submit" id="send-btn">Send</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="tools">
+        <button id="quiz-btn" class="tool-btn">🎯 Generate Quiz</button>
+        <button id="summarize-btn" class="tool-btn">📝 Summarize Notes</button>
+      </div>
+    </main>
+
+    <div id="loading" class="loading hidden">
+      <div class="spinner"></div>
+      <p>Thinking...</p>
+    </div>
+
+    <div id="error" class="error hidden">
+      <p id="error-message"></p>
+      <button id="close-error">Close</button>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
