@@ -11,7 +11,19 @@ app.use(express.static(path.join(__dirname, '../public')));
 
 // Routes
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', message: 'Server is running' });
+  // WORKSHOP: Flag appears when .env is loaded correctly
+  const hasApiKey = !!process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== 'your_api_key_here';
+  const response = {
+    status: 'ok',
+    message: 'Server is running',
+    environmentLoaded: hasApiKey
+  };
+
+  if (hasApiKey) {
+    response.flag = 'FLAG{environment_loaded_successfully}';
+  }
+
+  res.json(response);
 });
 
 // WORKSHOP: Import and use other routes here
