@@ -4,10 +4,9 @@ const { GoogleGenerativeAI } = require('@google/genai');
 
 // Initialize the Gemini client
 const apiKey = process.env.GEMINI_API_KEY;
-const model = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
+const modelName = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
 
-// Initialize the client
-// const genAI = new GoogleGenerativeAI(apiKey);
+const genAI = new GoogleGenerativeAI(apiKey);
 
 /**
  * Generate a chat response
@@ -16,7 +15,16 @@ const model = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
  * @returns {Promise<string>} The AI's response
  */
 async function generateChat(prompt, systemPrompt = null) {
-  throw new Error('Not implemented yet');
+  const model = genAI.getGenerativeModel({ model: modelName });
+
+  let content = prompt;
+  if (systemPrompt) {
+    content = `${systemPrompt}\n\nUser: ${prompt}`;
+  }
+
+  const result = await model.generateContent(content);
+  const response = await result.response;
+  return response.text();
 }
 
 /**
@@ -25,7 +33,61 @@ async function generateChat(prompt, systemPrompt = null) {
  * @returns {Promise<Object>} The quiz data
  */
 async function generateQuiz(topic) {
-  throw new Error('Not implemented yet');
+  const model = genAI.getGenerativeModel({
+    model: modelName,
+    generationConfig: {
+      responseMimeType: 'application/json',
+      responseSchema: {
+        type: 'object',
+        properties: {
+          topic: { type: 'string' },
+          questions: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                question: { type: 'string' },
+                options: {
+                  type: 'array',
+                  items: { type: 'string' },
+                  minItems: 4,
+                  maxItems: 4
+                },
+                answerIndex: { type: 'number', minimum: 0, maximum: 3 },
+                explanation: { type: 'string' }
+              },
+              required: ['question', 'options', 'answerIndex', 'explanation']
+            }
+          }
+        },
+        required: ['topic', 'questions']
+      }
+    }
+  });
+
+  const prompt = `Generate 5 multiple choice questions about ${topic}. Each question should have 4 options, a correct answer index (0-3), and a brief explanation.`;
+
+  const result = await model.generateContent(prompt);
+  const response = await result.response;
+  const text = response.text();
+
+  // Validate JSON
+  const quizData = JSON.parse(text);
+
+  // Server-side validation
+  if (!quizData.topic || !Array.isArray(quizData.questions) || quizData.questions.length !== 5) {
+    throw new Error('Invalid quiz structure');
+  }
+
+  for (const q of quizData.questions) {
+    if (!q.question || !Array.isArray(q.options) || q.options.length !== 4 ||
+        typeof q.answerIndex !== 'number' || q.answerIndex < 0 || q.answerIndex > 3 ||
+        !q.explanation) {
+      throw new Error('Invalid question structure');
+    }
+  }
+
+  return quizData;
 }
 
 module.exports = {

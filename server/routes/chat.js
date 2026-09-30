@@ -1,9 +1,7 @@
 const express = require('express');
 const router = express.Router();
-
-// Import gemini functions
-// const { generateChat } = require('../lib/gemini');
-// const { STUDY_BUDDY_PERSONA } = require('../prompts/system');
+const { generateChat } = require('../lib/gemini');
+const { STUDY_BUDDY_PERSONA } = require('../prompts/system');
 
 /**
  * POST /api/chat
@@ -11,9 +9,19 @@ const router = express.Router();
  * Returns: { response: string }
  */
 router.post('/', async (req, res) => {
-  res.status(501).json({
-    error: 'Not implemented yet'
-  });
+  try {
+    const { message } = req.body;
+
+    if (!message) {
+      return res.status(400).json({ error: 'Message is required' });
+    }
+
+    const response = await generateChat(message, STUDY_BUDDY_PERSONA);
+    res.json({ response });
+  } catch (error) {
+    console.error('Chat error:', error);
+    res.status(500).json({ error: 'Failed to generate response' });
+  }
 });
 
 module.exports = router;

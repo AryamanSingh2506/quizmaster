@@ -50,26 +50,27 @@ curl http://localhost:3000/api/health
 ### Step 1: First Chat
 
 **What you'll do**:
-- Initialize the Gemini SDK in `server/lib/gemini.js`
-- Implement the `generateChat` function
-- Connect the chat route in `server/routes/chat.js`
-- Enable the chat route in `server/index.js`
-- Update the frontend to call the chat API
+- Chat functionality is already implemented
+- Test the chat feature
+- Customize the system prompt if desired
 
-**Key changes to make**:
+**Key features**:
 1. In `server/lib/gemini.js`:
-   - Initialize `GoogleGenerativeAI` with your API key
-   - Implement `generateChat` to call the model
+   - `generateChat` uses the Gemini SDK
+   - Accepts optional system prompt parameter
+   - Returns the AI's text response
 
 2. In `server/routes/chat.js`:
-   - Import `generateChat` and `STUDY_BUDDY_PERSONA`
-   - Implement the POST route to call `generateChat`
+   - `/api/chat` endpoint is already wired up
+   - Accepts `{ message: string }` in request body
+   - Returns `{ response: string }`
 
 3. In `server/index.js`:
-   - Uncomment the chat route imports and middleware
+   - Chat route is already enabled
 
 4. In `public/app.js`:
-   - Uncomment the fetch call to `/api/chat`
+   - Chat API call is already implemented
+   - Type messages in the UI to test
 
 **Verification**:
 - Type a message in the chat interface
@@ -105,26 +106,23 @@ curl http://localhost:3000/api/health
 ### Step 3: JSON Quiz
 
 **What you'll do**:
-- Implement structured output using JSON schema
-- Create a quiz generator in `server/lib/gemini.js`
-- Connect the quiz route
-- Display quiz cards in the frontend
+- Quiz generation is already implemented with JSON schema
+- Test the quiz generation
+- Customize the quiz display if desired
 
-**Key changes to make**:
+**Key features**:
 1. In `server/lib/gemini.js`:
-   - Implement `generateQuiz` with JSON schema
-   - Ensure the response is valid JSON
+   - `generateQuiz` uses JSON schema with responseMimeType
+   - Server-side validation ensures proper structure
+   - Returns 5 MCQs with questions, options, answerIndex, and explanation
 
 2. In `server/routes/quiz.js`:
-   - Import and use `generateQuiz`
-   - Implement the POST route
+   - `/api/quiz` endpoint is already wired up
+   - Accepts `{ topic: string }` in request body
 
-3. In `server/index.js`:
-   - Uncomment the quiz route
-
-4. In `public/app.js`:
-   - Implement `displayQuiz` function
-   - Uncomment the quiz API call
+3. In `public/app.js`:
+   - `displayQuiz` function renders quiz cards in the chat
+   - Click "Generate Quiz" button to test
 
 **Expected JSON structure**:
 ```json

@@ -26,11 +26,11 @@ app.get('/api/health', (req, res) => {
 });
 
 // Import and use other routes here
-// const chatRoutes = require('./routes/chat');
-// const quizRoutes = require('./routes/quiz');
+const chatRoutes = require('./routes/chat');
+const quizRoutes = require('./routes/quiz');
 
-// app.use('/api/chat', chatRoutes);
-// app.use('/api/quiz', quizRoutes);
+app.use('/api/chat', chatRoutes);
+app.use('/api/quiz', quizRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);

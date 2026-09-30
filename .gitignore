@@ -19,5 +19,5 @@ Thumbs.db
 *.swp
 *.swo
 
-# Uploads (for step-5-multimodal)
+# Uploads
 uploads/

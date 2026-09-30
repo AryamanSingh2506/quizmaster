@@ -31,16 +31,13 @@ async function handleChatSubmit(e) {
   // Call the chat API
   try {
     showLoading();
-    // const response = await fetch('/api/chat', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({ message })
-    // });
-    // const data = await response.json();
-    // addMessage(data.response, 'assistant');
-
-    // Placeholder
-    addMessage('Chat feature coming soon!', 'system');
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message })
+    });
+    const data = await response.json();
+    addMessage(data.response, 'assistant');
   } catch (err) {
     showError('Failed to send message. Please try again.');
   } finally {
@@ -54,16 +51,13 @@ async function handleQuiz() {
 
   try {
     showLoading();
-    // const response = await fetch('/api/quiz', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({ topic })
-    // });
-    // const data = await response.json();
-    // displayQuiz(data.quiz);
-
-    // Placeholder
-    addMessage(`Quiz feature coming soon! Topic: ${topic}`, 'system');
+    const response = await fetch('/api/quiz', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ topic })
+    });
+    const data = await response.json();
+    displayQuiz(data.quiz);
   } catch (err) {
     showError('Failed to generate quiz. Please try again.');
   } finally {
@@ -107,7 +101,17 @@ function escapeHtml(text) {
 }
 
 function displayQuiz(quiz) {
-  console.log('Quiz data:', quiz);
+  addMessage(`📝 Quiz: ${quiz.topic}`, 'system');
+
+  quiz.questions.forEach((q, index) => {
+    const questionText = `Q${index + 1}: ${q.question}`;
+    const optionsText = q.options.map((opt, i) => `${i}. ${opt}`).join('\n');
+    const answerText = `Answer: ${q.answerIndex + 1}. ${q.options[q.answerIndex]}`;
+    const explanationText = `Explanation: ${q.explanation}`;
+
+    const quizContent = `${questionText}\n\n${optionsText}\n\n${answerText}\n\n${explanationText}`;
+    addMessage(quizContent, 'assistant');
+  });
 }
 
 // Check server health on load

@@ -54,8 +54,8 @@ curl http://localhost:3000/api/health
 - Check `/api/health` returns your flag when `.env` is configured correctly
 
 ### Step 1: Chat
-- Implement the chat functionality in `server/lib/gemini.js`
-- Wire up the route in `server/routes/chat.js`
+- Chat functionality is already implemented in `server/lib/gemini.js`
+- Route is wired up in `server/routes/chat.js`
 - Test by sending messages in the UI
 
 ### Step 2: System Prompt
@@ -64,11 +64,12 @@ curl http://localhost:3000/api/health
 - Test that it stays in character
 
 ### Step 3: Quiz JSON
-- Implement structured output for quiz generation
+- Quiz generation is already implemented with JSON schema
 - Generate 5 multiple-choice questions in JSON format
-- Display quiz cards in the UI
+- Quiz cards are displayed in the UI
 
-## 📁 Key Files to Study
+
+## �📁 Key Files to Study
 
 - `server/lib/gemini.js` - Where Gemini SDK calls happen
 - `server/prompts/system.js` - System instructions for the AI
