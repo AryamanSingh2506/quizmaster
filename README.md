@@ -2,13 +2,13 @@
 
 An AI-powered study assistant built with Google's Gemini API. Learn to integrate AI into your applications through hands-on checkpoints.
 
-## 🚀 Quick Start (5 Steps)
+## 🚀 Quick Start
 
 ### Step 1: Get Your Gemini API Key
 1. Go to [Google AI Studio](https://aistudio.google.com/app/apikey)
-2. Sign in with your Google account
+2. Sign in with your **personal Gmail account** (each person needs their own key)
 3. Click "Create API Key"
-4. Copy your API key (you'll need it in Step 3)
+4. Copy your API key
 
 ### Step 2: Clone the Repository
 ```bash
@@ -39,61 +39,41 @@ npm install
 npm start
 ```
 
+### Step 6: Test the Setup
 Open your browser and visit `http://localhost:3000`
 
-## 🎯 Workshop Checkpoints
-
-This project uses a treasure-hunt style learning approach. Each checkpoint branch adds a new feature:
-
-| Branch | Feature | Flag Hint |
-|--------|---------|-----------|
-| `step-0-starter` | UI + server stub | Check your `.env` file |
-| `step-1-chat` | First Gemini call | When the AI replies |
-| `step-2-system-prompt` | Study-buddy persona | When it stays in character |
-| `step-3-quiz-json` | JSON quiz cards | When JSON parses correctly |
-| `step-4-streaming` | Token streaming | When text appears gradually |
-| `step-5-multimodal` | Image summarization | When images work |
-| `step-6-antigravity` | AI agent planner | When the plan validates |
-
-### How to Navigate Checkpoints
-
+Then check the health endpoint to get your first flag:
 ```bash
-# See all available branches
-git branch -a
-
-# Switch to a checkpoint
-git checkout step-1-chat
-
-# See what changed
-git diff step-0-starter..step-1-chat
+curl http://localhost:3000/api/health
 ```
 
-## 📁 Project Structure
+## 🎯 Workshop Steps
 
-```
-gemini-study-buddy/
-├── README.md              # This file
-├── .env.example           # Environment variables template
-├── .gitignore             # Files to ignore in git
-├── package.json           # Dependencies and scripts
-├── server/
-│   ├── index.js           # Express app entry point
-│   ├── lib/
-│   │   └── gemini.js      # Gemini SDK wrapper
-│   ├── prompts/
-│   │   └── system.js      # System instructions
-│   └── routes/
-│       ├── chat.js        # Chat endpoint
-│       ├── quiz.js        # Quiz generation
-│       └── summarize.js   # Text/image summarization
-├── public/
-│   ├── index.html         # Frontend HTML
-│   ├── styles.css         # Styling
-│   └── app.js             # Frontend JavaScript
-└── docs/
-    ├── CHECKPOINTS.md     # Detailed checkpoint guide
-    └── TROUBLESHOOTING.md # Common issues and fixes
-```
+### Step 0: Setup
+- Verify the server is running
+- Check `/api/health` returns your flag when `.env` is configured correctly
+
+### Step 1: Chat
+- Implement the chat functionality in `server/lib/gemini.js`
+- Wire up the route in `server/routes/chat.js`
+- Test by sending messages in the UI
+
+### Step 2: System Prompt
+- Edit `server/prompts/system.js` to customize the AI persona
+- Make your study buddy explain at first-year level
+- Test that it stays in character
+
+### Step 3: Quiz JSON
+- Implement structured output for quiz generation
+- Generate 5 multiple-choice questions in JSON format
+- Display quiz cards in the UI
+
+## 📁 Key Files to Study
+
+- `server/lib/gemini.js` - Where Gemini SDK calls happen
+- `server/prompts/system.js` - System instructions for the AI
+- `server/routes/chat.js` - Chat endpoint
+- `server/routes/quiz.js` - Quiz generation endpoint
 
 ## 🔑 Important Security Note
 
@@ -111,14 +91,10 @@ gemini-study-buddy/
 - Making API calls to AI models
 - System prompts and AI personas
 - Structured output (JSON schema)
-- Streaming responses
-- Multimodal AI (text + images)
-- AI agents and planning
 
 ## 🆘 Need Help?
 
 - Check [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) for common issues
-- Review [docs/CHECKPOINTS.md](docs/CHECKPOINTS.md) for detailed checkpoint guidance
 - Ask a workshop instructor
 
 ## 📝 License

@@ -8,18 +8,14 @@ const error = document.getElementById('error');
 const errorMessage = document.getElementById('error-message');
 const closeError = document.getElementById('close-error');
 const quizBtn = document.getElementById('quiz-btn');
-const summarizeBtn = document.getElementById('summarize-btn');
 
 // State
 let isLoading = false;
-
-// WORKSHOP: Students will add streaming logic in step-4-streaming
 
 // Event Listeners
 chatForm.addEventListener('submit', handleChatSubmit);
 closeError.addEventListener('click', hideError);
 quizBtn.addEventListener('click', handleQuiz);
-summarizeBtn.addEventListener('click', handleSummarize);
 
 // Functions
 async function handleChatSubmit(e) {
@@ -32,7 +28,7 @@ async function handleChatSubmit(e) {
   addMessage(message, 'user');
   userInput.value = '';
 
-  // WORKSHOP: Call the chat API in step-1-chat
+  // Call the chat API
   try {
     showLoading();
     // const response = await fetch('/api/chat', {
@@ -43,8 +39,8 @@ async function handleChatSubmit(e) {
     // const data = await response.json();
     // addMessage(data.response, 'assistant');
 
-    // Placeholder for step-0
-    addMessage('Chat feature coming in step-1-chat!', 'system');
+    // Placeholder
+    addMessage('Chat feature coming soon!', 'system');
   } catch (err) {
     showError('Failed to send message. Please try again.');
   } finally {
@@ -53,7 +49,6 @@ async function handleChatSubmit(e) {
 }
 
 async function handleQuiz() {
-  // WORKSHOP: Implement quiz generation in step-3-quiz-json
   const topic = prompt('What topic would you like a quiz on?');
   if (!topic) return;
 
@@ -67,34 +62,10 @@ async function handleQuiz() {
     // const data = await response.json();
     // displayQuiz(data.quiz);
 
-    // Placeholder for step-0
-    addMessage(`Quiz feature coming in step-3-quiz-json! Topic: ${topic}`, 'system');
+    // Placeholder
+    addMessage(`Quiz feature coming soon! Topic: ${topic}`, 'system');
   } catch (err) {
     showError('Failed to generate quiz. Please try again.');
-  } finally {
-    hideLoading();
-  }
-}
-
-async function handleSummarize() {
-  // WORKSHOP: Implement summarization in step-5-multimodal
-  const content = prompt('Paste your notes or text to summarize:');
-  if (!content) return;
-
-  try {
-    showLoading();
-    // const response = await fetch('/api/summarize', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({ content })
-    // });
-    // const data = await response.json();
-    // addMessage(data.summary, 'assistant');
-
-    // Placeholder for step-0
-    addMessage('Summarization feature coming in step-5-multimodal!', 'system');
-  } catch (err) {
-    showError('Failed to summarize. Please try again.');
   } finally {
     hideLoading();
   }
@@ -135,9 +106,7 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
-// WORKSHOP: Students will add displayQuiz function in step-3-quiz-json
 function displayQuiz(quiz) {
-  // Placeholder for step-3-quiz-json
   console.log('Quiz data:', quiz);
 }
 

@@ -1,5 +1,4 @@
-// WORKSHOP: System prompts define the AI's personality and behavior
-// Students will modify this in step-2-system-prompt
+// System prompts define the AI's personality and behavior
 
 /**
  * Default system prompt for the study buddy
@@ -13,7 +12,7 @@ You are a helpful study buddy assistant. You help students learn by:
 `;
 
 /**
- * WORKSHOP: Students will create a more specific persona in step-2-system-prompt
+ * Students will create a more specific persona
  * For example: a patient tutor, a challenging quiz master, etc.
  */
 const STUDY_BUDDY_PERSONA = DEFAULT_SYSTEM_PROMPT;
