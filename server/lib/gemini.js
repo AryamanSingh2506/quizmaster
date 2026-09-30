@@ -1,6 +1,6 @@
 // This file wraps all Gemini SDK calls
 
-const { GoogleGenerativeAI } = require('@google/genai');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 // Initialize the Gemini client
 const apiKey = process.env.GEMINI_API_KEY;
@@ -30,9 +30,10 @@ async function generateChat(prompt, systemPrompt = null) {
 /**
  * Generate a quiz in JSON format
  * @param {string} topic - The topic to quiz on
+ * @param {string|null} notes - Optional study notes content to base the quiz on
  * @returns {Promise<Object>} The quiz data
  */
-async function generateQuiz(topic) {
+async function generateQuiz(topic, notes = null) {
   const model = genAI.getGenerativeModel({
     model: modelName,
     generationConfig: {
@@ -65,7 +66,9 @@ async function generateQuiz(topic) {
     }
   });
 
-  const prompt = `Generate 5 multiple choice questions about ${topic}. Each question should have 4 options, a correct answer index (0-3), and a brief explanation.`;
+  const prompt = notes
+    ? `Based on the following study notes on "${topic}", generate 5 multiple choice questions testing comprehension of key concepts. Each question should have 4 options, a correct answer index (0-3), and a brief explanation.\n\nSTUDY NOTES:\n${notes}`
+    : `Generate 5 multiple choice questions about ${topic}. Each question should have 4 options, a correct answer index (0-3), and a brief explanation.`;
 
   const result = await model.generateContent(prompt);
   const response = await result.response;

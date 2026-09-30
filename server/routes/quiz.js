@@ -9,13 +9,14 @@ const { generateQuiz } = require('../lib/gemini');
  */
 router.post('/', async (req, res) => {
   try {
-    const { topic } = req.body;
+    const { topic, notes } = req.body;
 
-    if (!topic) {
-      return res.status(400).json({ error: 'Topic is required' });
+    if (!topic && !notes) {
+      return res.status(400).json({ error: 'Topic or study notes are required' });
     }
 
-    const quiz = await generateQuiz(topic);
+    const quizTopic = topic || (notes ? 'Study Notes Review' : 'General Knowledge');
+    const quiz = await generateQuiz(quizTopic, notes || null);
     res.json({ quiz });
   } catch (error) {
     console.error('Quiz error:', error);

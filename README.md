@@ -83,7 +83,7 @@ curl http://localhost:3000/api/health
 ## 🛠️ Tech Stack
 
 - **Backend**: Node.js + Express
-- **AI**: Google Gemini API (@google/genai SDK)
+- **AI**: Google Gemini API (@google/generative-ai SDK)
 - **Frontend**: Plain HTML, CSS, JavaScript (no frameworks)
 
 ## 📚 What You'll Learn

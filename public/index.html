@@ -3,49 +3,279 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gemini Study Buddy</title>
+  <title>Gemini Study Buddy & Quiz Master</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="container">
-    <header>
-      <h1>📚 Gemini Study Buddy</h1>
-      <p>Your AI-powered learning assistant</p>
-    </header>
+  <div class="app-layout">
+    <!-- Left Navigation Sidebar (Learner AI Style) -->
+    <aside class="sidebar">
+      <!-- Profile Header -->
+      <div class="sidebar-user">
+        <div class="user-avatar">SB</div>
+        <div class="user-info">
+          <div class="user-name">Study Buddy</div>
+          <div class="user-email">Gemini AI Learning Assistant</div>
+        </div>
+      </div>
 
-    <main>
-      <div class="chat-container">
-        <div id="messages" class="messages">
-          <div class="message system">
-            <div class="message-content">
-              Welcome! I'm your study buddy. Ask me anything about your studies.
+      <!-- Navigation Menu -->
+      <nav class="sidebar-nav">
+        <div class="nav-group">
+          <div class="nav-group-title">WORKSPACE</div>
+          <button type="button" id="tab-chat" class="nav-item active">
+            <span class="nav-icon">💬</span>
+            <span class="nav-label">Study Chat</span>
+          </button>
+          <button type="button" id="tab-notes" class="nav-item">
+            <span class="nav-icon">📝</span>
+            <span class="nav-label">Study Notes</span>
+          </button>
+          <button type="button" id="tab-quiz" class="nav-item">
+            <span class="nav-icon">🏆</span>
+            <span class="nav-label">Quiz Master</span>
+          </button>
+        </div>
+      </nav>
+
+      <!-- Sidebar Footer Status -->
+      <div class="sidebar-footer">
+        <div class="sidebar-status-card">
+          <div class="status-indicator-dot"></div>
+          <span>Gemini 1.5 Flash Connected</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Workspace Area -->
+    <div class="main-wrapper">
+      <!-- Top Header Bar -->
+      <header class="top-header">
+        <div class="brand-logo">
+          GEMINI <span class="accent-ai">STUDY BUDDY</span>
+        </div>
+        <div class="top-header-right">
+          <button type="button" id="header-notes-btn" class="header-action-pill">
+            📝 <span>Add Notes</span>
+          </button>
+          <button type="button" id="header-quiz-btn" class="header-action-pill highlight">
+            🏆 <span>Quiz Master</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Content Views -->
+      <main class="content-container">
+        <!-- 1. STUDY CHAT VIEW -->
+        <section id="chat-view" class="view-panel">
+          <div class="section-title-bar">
+            <h2>💬 AI Study Chat</h2>
+            <p>Ask questions on any subject. Gemini will break down concepts clearly and concisely.</p>
+          </div>
+
+          <div class="chat-container">
+            <div id="messages" class="messages">
+              <div class="message system">
+                <div class="message-content">
+                  Welcome to Gemini Study Buddy! Ask me any study question, request an explanation, or try Quiz Master mode!
+                </div>
+              </div>
+            </div>
+
+            <div class="input-container">
+              <form id="chat-form">
+                <input
+                  type="text"
+                  id="user-input"
+                  placeholder="Ask a study question or enter a topic..."
+                  autocomplete="off"
+                />
+                <button type="submit" id="send-btn">Send ➔</button>
+              </form>
             </div>
           </div>
-        </div>
 
-        <div class="input-container">
-          <form id="chat-form">
-            <input
-              type="text"
-              id="user-input"
-              placeholder="Ask a question..."
-              autocomplete="off"
-            />
-            <button type="submit" id="send-btn">Send</button>
-          </form>
-        </div>
-      </div>
+          <div class="tools">
+            <button type="button" id="quiz-btn" class="tool-btn">🎯 Quick AI Quiz</button>
+            <button type="button" id="open-notes-btn" class="tool-btn">📝 Open Study Notes</button>
+            <button type="button" id="open-quiz-master-btn" class="tool-btn highlight">🏆 Launch Quiz Master</button>
+          </div>
+        </section>
 
-      <div class="tools">
-        <button id="quiz-btn" class="tool-btn">🎯 Generate Quiz</button>
-      </div>
-    </main>
+        <!-- 2. STUDY NOTES VIEW -->
+        <section id="notes-view" class="view-panel hidden">
+          <div class="section-title-bar">
+            <h2>📝 Study Notes</h2>
+            <p>Save notes, summaries, and transcripts. Gemini AI can read them and generate custom quizzes directly from your material!</p>
+          </div>
 
+          <div class="notes-layout">
+            <!-- Sidebar: Saved Notes List -->
+            <div class="notes-sidebar">
+              <div class="notes-sidebar-header">
+                <h3>📚 Saved Notes</h3>
+                <button type="button" id="new-note-btn" class="notes-icon-btn" title="Create new note">➕ New</button>
+              </div>
+              <div id="notes-list" class="notes-list">
+                <!-- Dynamically populated -->
+              </div>
+              <div class="notes-sidebar-footer">
+                <small class="text-muted">💾 Stored locally • Ready for Firebase sync</small>
+              </div>
+            </div>
+
+            <!-- Main: Note Editor -->
+            <div class="notes-editor-card">
+              <div class="editor-header">
+                <input type="text" id="note-title-input" class="note-title-input" placeholder="Note Title (e.g. JavaScript Closures & Event Loop)" />
+                <span id="note-date-badge" class="note-date-badge">New Draft</span>
+              </div>
+
+              <div class="editor-body">
+                <textarea id="note-content-input" class="note-textarea" placeholder="Paste or type your study notes here... Gemini AI will read this content and generate a tailored 5-question quiz for you!"></textarea>
+              </div>
+
+              <div class="editor-footer">
+                <div class="editor-stats">
+                  <span id="note-word-count">0 words</span>
+                  <span class="dot-separator">•</span>
+                  <span id="note-char-count">0 characters</span>
+                </div>
+                <div class="editor-actions">
+                  <button type="button" id="delete-note-btn" class="btn-secondary danger" title="Delete current note">🗑️ Delete</button>
+                  <button type="button" id="save-note-btn" class="btn-secondary">💾 Save Note</button>
+                  <button type="button" id="generate-from-note-btn" class="btn-mint">✨ Generate Quiz from Notes</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 3. QUIZ MASTER VIEW -->
+        <section id="quiz-view" class="view-panel hidden">
+          <div class="section-title-bar">
+            <h2>🏆 Quiz Master Challenge</h2>
+            <p>Test your knowledge under time pressure with a 15-second countdown timer and score tracking.</p>
+          </div>
+
+          <!-- Screen 1: Quiz Intro / Start -->
+          <div id="quiz-intro-card" class="quiz-card text-center">
+            <div class="quiz-icon">🏆</div>
+            <h2>Quiz Master Challenge</h2>
+            <p class="quiz-intro-subtitle">Test your knowledge under time pressure! Each question has a countdown timer.</p>
+            
+            <div class="quiz-source-card">
+              <label for="quiz-mode-select" class="source-label"><strong>Select Question Source:</strong></label>
+              <select id="quiz-mode-select" class="quiz-select">
+                <option value="default">⚡ Core Fundamentals (Offline)</option>
+                <option value="notes">📝 Generate from Saved Notes (Gemini AI)</option>
+                <option value="topic">🤖 Custom AI Topic (Gemini AI)</option>
+              </select>
+              
+              <div id="quiz-notes-dropdown-container" class="source-subfield hidden">
+                <select id="quiz-selected-note" class="quiz-select">
+                  <option value="">Choose a note...</option>
+                </select>
+              </div>
+
+              <div id="quiz-custom-topic-container" class="source-subfield hidden">
+                <input type="text" id="quiz-custom-topic-input" class="quiz-text-input" placeholder="Enter topic (e.g. Node.js Streams, Data Structures)" />
+              </div>
+            </div>
+
+            <div class="quiz-rules-box">
+              <div class="rule-item">⏱️ <strong>15 seconds</strong> per question with auto-timeout</div>
+              <div class="rule-item">🎯 <strong>4 options</strong> per question</div>
+              <div class="rule-item">⭐ Earn <strong>100 pts</strong> per correct answer</div>
+            </div>
+
+            <div class="quiz-start-actions">
+              <button type="button" id="start-quiz-btn" class="btn-mint large">🚀 Start Quiz</button>
+            </div>
+          </div>
+
+          <!-- Screen 2: Active Quiz Question -->
+          <div id="quiz-play-card" class="quiz-card hidden">
+            <!-- Quiz Status Header -->
+            <div class="quiz-status-bar">
+              <div class="quiz-badge counter-badge">
+                <span id="quiz-counter-text">Question 1 of 5</span>
+              </div>
+              <div id="quiz-timer-badge" class="quiz-badge timer-badge">
+                ⏳ <span id="quiz-timer-count">15</span>s
+              </div>
+              <div class="quiz-badge score-badge">
+                ⭐ <span id="quiz-live-score">0</span> pts
+              </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="progress-track">
+              <div id="quiz-progress-fill" class="progress-fill" style="width: 20%;"></div>
+            </div>
+
+            <!-- Question Content -->
+            <div class="quiz-question-box">
+              <h3 id="quiz-question-title" class="question-title">Question goes here</h3>
+            </div>
+
+            <!-- 4 Options Grid -->
+            <div id="quiz-options-list" class="options-grid">
+              <!-- Dynamically populated -->
+            </div>
+
+            <!-- Visual Feedback Banner -->
+            <div id="quiz-feedback-banner" class="feedback-banner hidden"></div>
+
+            <!-- Quiz Action Footer -->
+            <div class="quiz-footer">
+              <button type="button" id="quiz-quit-btn" class="btn-secondary">Quit</button>
+              <button type="button" id="quiz-next-btn" class="btn-primary" disabled>Next Question ➔</button>
+            </div>
+          </div>
+
+          <!-- Screen 3: Quiz Results Screen -->
+          <div id="quiz-results-card" class="quiz-card text-center hidden">
+            <div id="result-trophy" class="quiz-icon">🎉</div>
+            <h2 id="result-headline">Quiz Completed!</h2>
+            <p id="result-subtext" class="quiz-intro-subtitle">Here is how you performed:</p>
+
+            <div class="results-score-display">
+              <span class="score-number" id="result-final-score">0</span>
+              <span class="score-label">Total Points</span>
+            </div>
+
+            <div class="results-stats-row">
+              <div class="stat-pill">
+                <span class="stat-title">Accuracy</span>
+                <strong id="result-percentage">0%</strong>
+              </div>
+              <div class="stat-pill">
+                <span class="stat-title">Correct</span>
+                <strong id="result-correct-count">0 / 5</strong>
+              </div>
+              <div class="stat-pill">
+                <span class="stat-title">Timed Out</span>
+                <strong id="result-timeout-count">0</strong>
+              </div>
+            </div>
+
+            <div class="quiz-start-actions">
+              <button type="button" id="quiz-restart-btn" class="btn-mint large">🔄 Restart Quiz</button>
+              <button type="button" id="quiz-return-chat-btn" class="btn-secondary">💬 Back to Chat</button>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- Loading Overlay -->
     <div id="loading" class="loading hidden">
       <div class="spinner"></div>
       <p>Thinking...</p>
     </div>
 
+    <!-- Error Toast -->
     <div id="error" class="error hidden">
       <p id="error-message"></p>
       <button id="close-error">Close</button>
