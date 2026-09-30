@@ -1,0 +1,364 @@
+rules_version = '2';
+
+// ===============================================================
+// Assumed Data Model
+// ===============================================================
+//
+// This security rules file assumes the following data structures:
+//
+// Collection: users
+// Document ID: {userId} (Must match request.auth.uid)
+// Fields:
+//   - uid: string (required, 1-128 chars, matches request.auth.uid, immutable) - Auth UID
+//   - displayName: string (required, 1-100 chars) - Student display name
+//   - email: string (required, 3-254 chars, valid email format) - Student email
+//   - photoURL: string (optional, 0-2048 chars, valid http/https URL or empty) - Profile avatar URL
+//   - xp: int/float (required, >= 0) - Experience points
+//   - totalQuizzes: int/float (required, >= 0) - Cumulative completed quizzes
+//   - questionsAnsweredToday: int/float (required, >= 0) - Daily questions answered counter
+//   - lastQuizDate: timestamp/string/null (optional, <= 50 chars) - Date of most recent quiz
+//   - createdAt: timestamp (required, immutable) - Account creation timestamp
+//   - updatedAt: timestamp (required) - Profile update timestamp
+//
+// Subcollection: users/{userId}/notes
+// Document ID: {noteId} (Auto-generated or custom string)
+// Fields:
+//   - title: string (required, 1-200 chars) - Study note title
+//   - content: string (required, 0-50,000 chars) - Note body / study material
+//   - tags: list (optional, max 20 strings) - Categorization tags
+//   - createdAt: timestamp/string (optional, <= 50 chars, immutable) - Note creation timestamp
+//   - updatedAt: timestamp/string (optional, <= 50 chars) - Note modification timestamp
+//   - userId: string (optional, matches userId) - Owner UID reference
+//   - id: string (optional, <= 128 chars) - Note ID mirror
+//
+// Subcollection: users/{userId}/chatHistory
+// Document ID: {messageId} (Auto-generated or custom string)
+// Fields:
+//   - role: string (required, 'user' | 'assistant' | 'model' | 'system') - Message sender role
+//   - content: string (required if 'message' not present, 1-30,000 chars) - AI conversation body
+//   - message: string (required if 'content' not present, 1-30,000 chars) - Alternate conversation body
+//   - timestamp: timestamp/string (optional, <= 50 chars, immutable) - Message timestamp
+//   - createdAt: timestamp/string (optional, <= 50 chars, immutable) - Message creation timestamp
+//   - topic: string (optional, <= 100 chars) - Conversation study subject
+//   - model: string (optional, <= 100 chars) - AI model identifier
+//   - userId: string (optional, matches userId) - Owner UID reference
+//   - id: string (optional, <= 128 chars) - Message ID mirror
+//
+// Subcollection: users/{userId}/quizAttempts
+// Document ID: {attemptId} (Auto-generated or custom string)
+// Fields:
+//   - score: int/float (required, >= 0) - Quiz points scored
+//   - accuracy: int/float (required, 0-100) - Percentage accuracy
+//   - timestamp: timestamp/string (optional, <= 50 chars, immutable) - Attempt timestamp
+//   - createdAt: timestamp/string (optional, <= 50 chars, immutable) - Attempt creation timestamp
+//   - totalQuestions: int/float (optional, >= 0) - Total questions in quiz
+//   - correctCount: int/float (optional, >= 0) - Correct answers count
+//   - wrongCount: int/float (optional, >= 0) - Incorrect answers count
+//   - timeoutCount: int/float (optional, >= 0) - Timed-out questions count
+//   - topic: string (optional, <= 100 chars) - Quiz subject
+//   - userId: string (optional, matches userId) - Owner UID reference
+//   - id: string (optional, <= 128 chars) - Attempt ID mirror
+//
+// Collection: leaderboard
+// Document ID: {docId} (Preferably matches user's request.auth.uid)
+// Fields:
+//   - uid: string (required, matches request.auth.uid, immutable) - Student UID
+//   - displayName: string (required, 1-100 chars) - Student display name
+//   - photoURL: string (optional, 0-2048 chars) - Student avatar URL
+//   - xp: int/float (required, >= 0) - Leaderboard XP score
+//   - totalQuizzes: int/float (optional, >= 0) - Completed quizzes count
+//   - accuracy: int/float (optional, 0-100) - Overall accuracy percentage
+//   - rank: int/float (optional, >= 0) - Leaderboard ranking position
+//   - createdAt: timestamp/string (optional, <= 50 chars, immutable) - Entry creation timestamp
+//   - updatedAt: timestamp/string (optional, <= 50 chars) - Last score update timestamp
+//
+// ===============================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+
+    // Check if the request is from an authenticated user
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Check if the authenticated user owns the resource path
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Check if the authenticated user matches the existing document's uid field
+    function isDocOwner() {
+      return isAuthenticated() && resource != null && resource.data.uid == request.auth.uid;
+    }
+
+    // Check if a value is numeric (integer or float)
+    function isNumeric(val) {
+      return val is int || val is float;
+    }
+
+    // Check if a value is a non-negative number (>= 0)
+    function isNonNegativeNumber(val) {
+      return isNumeric(val) && val >= 0;
+    }
+
+    // Validate email format with standard pattern
+    function isValidEmail(email) {
+      return email is string &&
+        email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    // Validate URL format (http or https)
+    function isValidUrl(url) {
+      return url is string &&
+        (url.matches("^https://.*") || url.matches("^http://.*"));
+    }
+
+    // Validate that immutable fields are not modified during an update
+    function areImmutableFieldsUnchanged(fields) {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(fields);
+    }
+
+    // ===============================================================
+    // Domain Validators (Applied to both create and update operations)
+    // ===============================================================
+
+    // Validate user profile schema
+    function isValidUser(data, userId) {
+      let allowedKeys = [
+        'uid', 'displayName', 'email', 'photoURL',
+        'xp', 'totalQuizzes', 'questionsAnsweredToday',
+        'lastQuizDate', 'createdAt', 'updatedAt'
+      ];
+      let requiredKeys = ['uid', 'displayName', 'email', 'createdAt', 'updatedAt'];
+
+      return data.keys().hasOnly(allowedKeys) &&
+             data.keys().hasAll(requiredKeys) &&
+             data.uid is string &&
+             data.uid == userId &&
+             data.uid == request.auth.uid &&
+             data.uid.size() >= 1 &&
+             data.uid.size() <= 128 &&
+             data.displayName is string &&
+             data.displayName.size() >= 1 &&
+             data.displayName.size() <= 100 &&
+             data.email is string &&
+             data.email.size() >= 3 &&
+             data.email.size() <= 254 &&
+             isValidEmail(data.email) &&
+             (!('photoURL' in data) || data.photoURL == null || (data.photoURL is string && data.photoURL.size() <= 2048)) &&
+             (!('xp' in data) || isNonNegativeNumber(data.xp)) &&
+             (!('totalQuizzes' in data) || isNonNegativeNumber(data.totalQuizzes)) &&
+             (!('questionsAnsweredToday' in data) || isNonNegativeNumber(data.questionsAnsweredToday)) &&
+             (!('lastQuizDate' in data) || data.lastQuizDate == null || data.lastQuizDate is timestamp || (data.lastQuizDate is string && data.lastQuizDate.size() <= 50)) &&
+             data.createdAt is timestamp &&
+             data.updatedAt is timestamp;
+    }
+
+    // Validate personal study note schema
+    function isValidNote(data) {
+      let allowedKeys = ['title', 'content', 'createdAt', 'updatedAt', 'userId', 'id', 'tags'];
+      let requiredKeys = ['title', 'content'];
+
+      return data.keys().hasOnly(allowedKeys) &&
+             data.keys().hasAll(requiredKeys) &&
+             data.title is string &&
+             data.title.size() >= 1 &&
+             data.title.size() <= 200 &&
+             data.content is string &&
+             data.content.size() <= 50000 &&
+             (!('tags' in data) || (data.tags is list && data.tags.size() <= 20)) &&
+             (!('createdAt' in data) || data.createdAt is timestamp || (data.createdAt is string && data.createdAt.size() <= 50)) &&
+             (!('updatedAt' in data) || data.updatedAt is timestamp || (data.updatedAt is string && data.updatedAt.size() <= 50)) &&
+             (!('userId' in data) || (data.userId is string && data.userId == request.auth.uid)) &&
+             (!('id' in data) || (data.id is string && data.id.size() <= 128));
+    }
+
+    // Validate AI chat message schema
+    function isValidChatMessage(data) {
+      let allowedKeys = ['role', 'content', 'message', 'timestamp', 'createdAt', 'userId', 'id', 'topic', 'model'];
+
+      return data.keys().hasOnly(allowedKeys) &&
+             ('role' in data) &&
+             data.role is string &&
+             data.role in ['user', 'assistant', 'model', 'system'] &&
+             (
+               ('content' in data && data.content is string && data.content.size() >= 1 && data.content.size() <= 30000) ||
+               ('message' in data && data.message is string && data.message.size() >= 1 && data.message.size() <= 30000)
+             ) &&
+             (!('timestamp' in data) || data.timestamp is timestamp || (data.timestamp is string && data.timestamp.size() <= 50)) &&
+             (!('createdAt' in data) || data.createdAt is timestamp || (data.createdAt is string && data.createdAt.size() <= 50)) &&
+             (!('userId' in data) || (data.userId is string && data.userId == request.auth.uid)) &&
+             (!('id' in data) || (data.id is string && data.id.size() <= 128)) &&
+             (!('topic' in data) || (data.topic is string && data.topic.size() <= 100)) &&
+             (!('model' in data) || (data.model is string && data.model.size() <= 100));
+    }
+
+    // Validate personal quiz attempt schema
+    function isValidQuizAttempt(data) {
+      let allowedKeys = [
+        'score', 'accuracy', 'timestamp', 'createdAt',
+        'topic', 'totalQuestions', 'correctCount',
+        'wrongCount', 'timeoutCount', 'userId', 'id'
+      ];
+      let requiredKeys = ['score', 'accuracy'];
+
+      return data.keys().hasOnly(allowedKeys) &&
+             data.keys().hasAll(requiredKeys) &&
+             isNonNegativeNumber(data.score) &&
+             isNumeric(data.accuracy) &&
+             data.accuracy >= 0 &&
+             data.accuracy <= 100 &&
+             (('timestamp' in data) || ('createdAt' in data)) &&
+             (!('timestamp' in data) || data.timestamp is timestamp || (data.timestamp is string && data.timestamp.size() <= 50)) &&
+             (!('createdAt' in data) || data.createdAt is timestamp || (data.createdAt is string && data.createdAt.size() <= 50)) &&
+             (!('topic' in data) || (data.topic is string && data.topic.size() <= 100)) &&
+             (!('totalQuestions' in data) || isNonNegativeNumber(data.totalQuestions)) &&
+             (!('correctCount' in data) || isNonNegativeNumber(data.correctCount)) &&
+             (!('wrongCount' in data) || isNonNegativeNumber(data.wrongCount)) &&
+             (!('timeoutCount' in data) || isNonNegativeNumber(data.timeoutCount)) &&
+             (!('userId' in data) || (data.userId is string && data.userId == request.auth.uid)) &&
+             (!('id' in data) || (data.id is string && data.id.size() <= 128));
+    }
+
+    // Validate global leaderboard entry schema
+    function isValidLeaderboardEntry(data) {
+      let allowedKeys = [
+        'uid', 'displayName', 'photoURL', 'xp',
+        'totalQuizzes', 'accuracy', 'rank',
+        'createdAt', 'updatedAt'
+      ];
+      let requiredKeys = ['uid', 'displayName', 'xp'];
+
+      return data.keys().hasOnly(allowedKeys) &&
+             data.keys().hasAll(requiredKeys) &&
+             data.uid is string &&
+             data.uid == request.auth.uid &&
+             data.uid.size() >= 1 &&
+             data.uid.size() <= 128 &&
+             data.displayName is string &&
+             data.displayName.size() >= 1 &&
+             data.displayName.size() <= 100 &&
+             (!('photoURL' in data) || data.photoURL == null || (data.photoURL is string && data.photoURL.size() <= 2048)) &&
+             isNonNegativeNumber(data.xp) &&
+             (!('totalQuizzes' in data) || isNonNegativeNumber(data.totalQuizzes)) &&
+             (!('accuracy' in data) || (isNumeric(data.accuracy) && data.accuracy >= 0 && data.accuracy <= 100)) &&
+             (!('rank' in data) || isNonNegativeNumber(data.rank)) &&
+             (!('createdAt' in data) || data.createdAt is timestamp || (data.createdAt is string && data.createdAt.size() <= 50)) &&
+             (!('updatedAt' in data) || data.updatedAt is timestamp || (data.updatedAt is string && data.updatedAt.size() <= 50));
+    }
+
+    // ===============================================================
+    // Collection Rules
+    // ===============================================================
+
+    // 1. Users Collection
+    match /users/{userId} {
+      // Read allowed for authenticated users (enables global leaderboard queries by rank/XP)
+      allow read: if isAuthenticated();
+
+      // Create allowed only if authenticated user creates their own profile with valid schema
+      allow create: if isOwner(userId) && isValidUser(request.resource.data, userId);
+
+      // Update allowed only if authenticated owner updates with valid schema and immutable fields unchanged
+      allow update: if isOwner(userId) &&
+                       isValidUser(request.resource.data, userId) &&
+                       areImmutableFieldsUnchanged(['uid', 'createdAt']);
+
+      // Delete allowed only by profile owner
+      allow delete: if isOwner(userId);
+
+      // -------------------------------------------------------------
+      // 2. Personal Study Notes Subcollection
+      // -------------------------------------------------------------
+      match /notes/{noteId} {
+        // Strictly private to owner
+        allow read: if isOwner(userId);
+
+        // Create allowed only by owner with valid note schema
+        allow create: if isOwner(userId) && isValidNote(request.resource.data);
+
+        // Update allowed only by owner with valid note schema and immutable fields unchanged
+        allow update: if isOwner(userId) &&
+                         isValidNote(request.resource.data) &&
+                         areImmutableFieldsUnchanged(['createdAt']);
+
+        // Delete allowed only by owner
+        allow delete: if isOwner(userId);
+      }
+
+      // -------------------------------------------------------------
+      // 3. Personal AI Chat History Subcollection
+      // -------------------------------------------------------------
+      match /chatHistory/{messageId} {
+        // Strictly private to owner
+        allow read: if isOwner(userId);
+
+        // Create allowed only by owner with valid chat message schema
+        allow create: if isOwner(userId) && isValidChatMessage(request.resource.data);
+
+        // Update allowed only by owner with valid chat message schema
+        allow update: if isOwner(userId) &&
+                         isValidChatMessage(request.resource.data) &&
+                         areImmutableFieldsUnchanged(['timestamp', 'createdAt']);
+
+        // Delete allowed only by owner
+        allow delete: if isOwner(userId);
+      }
+
+      // -------------------------------------------------------------
+      // 4. Personal Quiz Attempts Subcollection
+      // -------------------------------------------------------------
+      match /quizAttempts/{attemptId} {
+        // Strictly private to owner
+        allow read: if isOwner(userId);
+
+        // Create allowed only by owner with valid quiz attempt schema
+        allow create: if isOwner(userId) && isValidQuizAttempt(request.resource.data);
+
+        // Update allowed only by owner with valid quiz attempt schema
+        allow update: if isOwner(userId) &&
+                         isValidQuizAttempt(request.resource.data) &&
+                         areImmutableFieldsUnchanged(['timestamp', 'createdAt']);
+
+        // Delete allowed only by owner
+        allow delete: if isOwner(userId);
+      }
+    }
+
+    // ---------------------------------------------------------------
+    // 5. Global Leaderboard Collection
+    // ---------------------------------------------------------------
+    match /leaderboard/{docId} {
+      // Public or authenticated read for global rankings
+      allow read: if true;
+
+      // Authenticated users can create their own entry (keyed by auth.uid or carrying their uid)
+      allow create: if isAuthenticated() &&
+                       (docId == request.auth.uid || request.resource.data.uid == request.auth.uid) &&
+                       isValidLeaderboardEntry(request.resource.data);
+
+      // Authenticated users can update only their own entry
+      allow update: if isAuthenticated() &&
+                       (docId == request.auth.uid || resource.data.uid == request.auth.uid) &&
+                       request.resource.data.uid == request.auth.uid &&
+                       isValidLeaderboardEntry(request.resource.data) &&
+                       areImmutableFieldsUnchanged(['uid', 'createdAt']);
+
+      // Authenticated users can delete only their own entry
+      allow delete: if isAuthenticated() &&
+                       (docId == request.auth.uid || resource.data.uid == request.auth.uid);
+    }
+
+    // ---------------------------------------------------------------
+    // Root Default Deny
+    // ---------------------------------------------------------------
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

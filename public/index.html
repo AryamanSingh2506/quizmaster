@@ -8,15 +8,16 @@
 </head>
 <body>
   <div class="app-layout">
-    <!-- Left Navigation Sidebar (Learner AI Style) -->
+    <!-- Left Navigation Sidebar -->
     <aside class="sidebar">
-      <!-- Profile Header -->
-      <div class="sidebar-user">
-        <div class="user-avatar">SB</div>
+      <!-- Profile Header / Auth State -->
+      <div class="sidebar-user" id="sidebar-user-container">
+        <div class="user-avatar" id="user-avatar-display">GL</div>
         <div class="user-info">
-          <div class="user-name">Study Buddy</div>
-          <div class="user-email">Gemini AI Learning Assistant</div>
+          <div class="user-name" id="user-name-display">Guest Learner</div>
+          <div class="user-email" id="user-email-display">Sign in to sync data</div>
         </div>
+        <button type="button" id="sidebar-auth-btn" class="sidebar-auth-btn" title="Sign In or Sign Out">Login</button>
       </div>
 
       <!-- Navigation Menu -->
@@ -32,17 +33,32 @@
             <span class="nav-label">Study Notes</span>
           </button>
           <button type="button" id="tab-quiz" class="nav-item">
-            <span class="nav-icon">🏆</span>
+            <span class="nav-icon">⚡</span>
             <span class="nav-label">Quiz Master</span>
+          </button>
+          <button type="button" id="tab-leaderboard" class="nav-item">
+            <span class="nav-icon">🏆</span>
+            <span class="nav-label">Leaderboard</span>
           </button>
         </div>
       </nav>
 
-      <!-- Sidebar Footer Status -->
+      <!-- Sidebar Footer Status & Daily Quota -->
       <div class="sidebar-footer">
+        <div class="daily-quota-card" id="sidebar-quota-container">
+          <div class="quota-header">
+            <span>⚡ Daily Quiz Quota</span>
+            <strong id="sidebar-quota-text">0 / 50</strong>
+          </div>
+          <div class="quota-bar-track">
+            <div id="sidebar-quota-fill" class="quota-bar-fill" style="width: 0%;"></div>
+          </div>
+          <small class="quota-subtext">50 questions/day max limit</small>
+        </div>
+
         <div class="sidebar-status-card">
           <div class="status-indicator-dot"></div>
-          <span>Gemini 1.5 Flash Connected</span>
+          <span id="backend-status-text">Firebase & Gemini Connected</span>
         </div>
       </div>
     </aside>
@@ -58,8 +74,14 @@
           <button type="button" id="header-notes-btn" class="header-action-pill">
             📝 <span>Add Notes</span>
           </button>
-          <button type="button" id="header-quiz-btn" class="header-action-pill highlight">
-            🏆 <span>Quiz Master</span>
+          <button type="button" id="header-quiz-btn" class="header-action-pill">
+            ⚡ <span>Quiz Master</span>
+          </button>
+          <button type="button" id="header-leaderboard-btn" class="header-action-pill highlight">
+            🏆 <span>Leaderboard</span>
+          </button>
+          <button type="button" id="header-auth-btn" class="header-action-pill auth-pill">
+            👤 <span id="header-auth-text">Sign In</span>
           </button>
         </div>
       </header>
@@ -70,14 +92,14 @@
         <section id="chat-view" class="view-panel">
           <div class="section-title-bar">
             <h2>💬 AI Study Chat</h2>
-            <p>Ask questions on any subject. Gemini will break down concepts clearly and concisely.</p>
+            <p>Ask questions on any subject. Gemini breaks down concepts clearly, and your conversations are saved in Firebase Firestore.</p>
           </div>
 
           <div class="chat-container">
             <div id="messages" class="messages">
               <div class="message system">
                 <div class="message-content">
-                  Welcome to Gemini Study Buddy! Ask me any study question, request an explanation, or try Quiz Master mode!
+                  ✨ <strong>Welcome to Gemini Study Buddy & Quiz Master!</strong> Ask any study question, take notes in the <strong>Study Notes</strong> tab, or test your knowledge in <strong>Quiz Master</strong>.
                 </div>
               </div>
             </div>
@@ -98,7 +120,8 @@
           <div class="tools">
             <button type="button" id="quiz-btn" class="tool-btn">🎯 Quick AI Quiz</button>
             <button type="button" id="open-notes-btn" class="tool-btn">📝 Open Study Notes</button>
-            <button type="button" id="open-quiz-master-btn" class="tool-btn highlight">🏆 Launch Quiz Master</button>
+            <button type="button" id="open-quiz-master-btn" class="tool-btn highlight">⚡ Launch Quiz Master</button>
+            <button type="button" id="open-leaderboard-btn" class="tool-btn">🏆 View Leaderboard</button>
           </div>
         </section>
 
@@ -106,7 +129,7 @@
         <section id="notes-view" class="view-panel hidden">
           <div class="section-title-bar">
             <h2>📝 Study Notes</h2>
-            <p>Save notes, summaries, and transcripts. Gemini AI can read them and generate custom quizzes directly from your material!</p>
+            <p>Save notes, summaries, and lecture material. Synchronized to Firebase Cloud Firestore and ready for AI Quiz Generation!</p>
           </div>
 
           <div class="notes-layout">
@@ -120,7 +143,7 @@
                 <!-- Dynamically populated -->
               </div>
               <div class="notes-sidebar-footer">
-                <small class="text-muted">💾 Stored locally • Ready for Firebase sync</small>
+                <small class="text-muted" id="notes-sync-indicator">☁️ Cloud Synced with Firestore</small>
               </div>
             </div>
 
@@ -132,7 +155,7 @@
               </div>
 
               <div class="editor-body">
-                <textarea id="note-content-input" class="note-textarea" placeholder="Paste or type your study notes here... Gemini AI will read this content and generate a tailored 5-question quiz for you!"></textarea>
+                <textarea id="note-content-input" class="note-textarea" placeholder="Paste or type your study notes here... Gemini AI will read this content and generate a tailored quiz for you!"></textarea>
               </div>
 
               <div class="editor-footer">
@@ -154,16 +177,32 @@
         <!-- 3. QUIZ MASTER VIEW -->
         <section id="quiz-view" class="view-panel hidden">
           <div class="section-title-bar">
-            <h2>🏆 Quiz Master Challenge</h2>
-            <p>Test your knowledge under time pressure with a 15-second countdown timer and score tracking.</p>
+            <h2>⚡ Quiz Master Challenge</h2>
+            <p>Test your knowledge under time pressure with a 15-second countdown timer, score tracking, and daily quota limits.</p>
+          </div>
+
+          <!-- Daily Quota Alert Banner (shown when limit reached) -->
+          <div id="quiz-quota-limit-banner" class="quota-limit-banner hidden">
+            <div class="quota-limit-icon">🚫</div>
+            <div class="quota-limit-content">
+              <h4>Daily Quiz Limit Reached (50 / 50 questions)</h4>
+              <p>You have reached the maximum quota of 50 quiz questions for today. Your quota resets at midnight! In the meantime, you can review your saved Study Notes or ask questions in AI Study Chat.</p>
+            </div>
           </div>
 
           <!-- Screen 1: Quiz Intro / Start -->
           <div id="quiz-intro-card" class="quiz-card text-center">
-            <div class="quiz-icon">🏆</div>
+            <div class="quiz-icon">⚡</div>
             <h2>Quiz Master Challenge</h2>
-            <p class="quiz-intro-subtitle">Test your knowledge under time pressure! Each question has a countdown timer.</p>
+            <p class="quiz-intro-subtitle">Test your knowledge under time pressure! Each question has a 15-second countdown timer.</p>
             
+            <div class="quiz-quota-box">
+              <div class="quota-pill-label">Daily Question Quota:</div>
+              <div class="quota-pill-badge">
+                <span id="intro-quota-counter">0 / 50 questions used today</span>
+              </div>
+            </div>
+
             <div class="quiz-source-card">
               <label for="quiz-mode-select" class="source-label"><strong>Select Question Source:</strong></label>
               <select id="quiz-mode-select" class="quiz-select">
@@ -186,7 +225,8 @@
             <div class="quiz-rules-box">
               <div class="rule-item">⏱️ <strong>15 seconds</strong> per question with auto-timeout</div>
               <div class="rule-item">🎯 <strong>4 options</strong> per question</div>
-              <div class="rule-item">⭐ Earn <strong>100 pts</strong> per correct answer</div>
+              <div class="rule-item">⭐ Earn <strong>100 pts</strong> per correct answer for the Leaderboard</div>
+              <div class="rule-item">📊 Quota limit: <strong>50 questions</strong> per day</div>
             </div>
 
             <div class="quiz-start-actions">
@@ -242,7 +282,7 @@
 
             <div class="results-score-display">
               <span class="score-number" id="result-final-score">0</span>
-              <span class="score-label">Total Points</span>
+              <span class="score-label">Points Earned</span>
             </div>
 
             <div class="results-stats-row">
@@ -258,15 +298,134 @@
                 <span class="stat-title">Timed Out</span>
                 <strong id="result-timeout-count">0</strong>
               </div>
+              <div class="stat-pill">
+                <span class="stat-title">Questions Today</span>
+                <strong id="result-quota-count">0 / 50</strong>
+              </div>
             </div>
 
             <div class="quiz-start-actions">
-              <button type="button" id="quiz-restart-btn" class="btn-mint large">🔄 Restart Quiz</button>
+              <button type="button" id="quiz-restart-btn" class="btn-mint large">🔄 Play Another Quiz</button>
+              <button type="button" id="quiz-goto-leaderboard-btn" class="btn-secondary">🏆 View Leaderboard</button>
               <button type="button" id="quiz-return-chat-btn" class="btn-secondary">💬 Back to Chat</button>
             </div>
           </div>
         </section>
+
+        <!-- 4. LEADERBOARD VIEW -->
+        <section id="leaderboard-view" class="view-panel hidden">
+          <div class="section-title-bar">
+            <h2>🏆 Global Leaderboard</h2>
+            <p>Top students and learners ranked by points earned in quizzes. Live synchronized via Firebase Firestore!</p>
+          </div>
+
+          <!-- Top 3 Podium Highlights -->
+          <div class="podium-row" id="leaderboard-podium">
+            <div class="podium-card rank-2">
+              <div class="podium-crown">🥈</div>
+              <div class="podium-avatar">2</div>
+              <div class="podium-name" id="podium-name-2">Silver Scholar</div>
+              <div class="podium-xp" id="podium-xp-2">0 XP</div>
+              <div class="podium-badge">Rank 2</div>
+            </div>
+            <div class="podium-card rank-1">
+              <div class="podium-crown">👑</div>
+              <div class="podium-avatar">1</div>
+              <div class="podium-name" id="podium-name-1">Quiz Master</div>
+              <div class="podium-xp" id="podium-xp-1">0 XP</div>
+              <div class="podium-badge">Champion</div>
+            </div>
+            <div class="podium-card rank-3">
+              <div class="podium-crown">🥉</div>
+              <div class="podium-avatar">3</div>
+              <div class="podium-name" id="podium-name-3">Bronze Ace</div>
+              <div class="podium-xp" id="podium-xp-3">0 XP</div>
+              <div class="podium-badge">Rank 3</div>
+            </div>
+          </div>
+
+          <!-- Leaderboard Table Card -->
+          <div class="leaderboard-card">
+            <div class="leaderboard-header-row">
+              <h3>⭐ Student Rankings</h3>
+              <div class="leaderboard-actions">
+                <button type="button" id="refresh-leaderboard-btn" class="btn-secondary small">🔄 Refresh Leaderboard</button>
+              </div>
+            </div>
+
+            <div class="leaderboard-table-wrapper">
+              <table class="leaderboard-table">
+                <thead>
+                  <tr>
+                    <th class="th-rank">Rank</th>
+                    <th class="th-user">Student</th>
+                    <th class="th-quizzes">Quizzes Completed</th>
+                    <th class="th-today">Questions Today</th>
+                    <th class="th-xp">Total Score (XP)</th>
+                  </tr>
+                </thead>
+                <tbody id="leaderboard-body">
+                  <!-- Populated dynamically via Firestore -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
       </main>
+    </div>
+
+    <!-- Authentication Modal (Google + Email/Password) -->
+    <div id="auth-modal" class="modal-overlay hidden">
+      <div class="auth-modal-card">
+        <button type="button" id="close-auth-modal" class="modal-close-btn">&times;</button>
+        <div class="auth-modal-header text-center">
+          <div class="auth-brand-icon">🔥</div>
+          <h2 id="auth-modal-title">Sign In to Study Buddy</h2>
+          <p id="auth-modal-subtitle">Save your notes in Firebase, track your rank on the Leaderboard, and sync your progress.</p>
+        </div>
+
+        <!-- Google One-Click Sign In -->
+        <button type="button" id="google-signin-btn" class="btn-google">
+          <svg class="google-icon" viewBox="0 0 24 24" width="20" height="20">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+          </svg>
+          <span>Continue with Google</span>
+        </button>
+
+        <div class="auth-divider">
+          <span>or continue with email</span>
+        </div>
+
+        <!-- Email & Password Form -->
+        <form id="auth-form" class="auth-form">
+          <div id="auth-name-field" class="form-group hidden">
+            <label for="auth-name-input">Display Name</label>
+            <input type="text" id="auth-name-input" placeholder="Your name (e.g. Alex Johnson)" autocomplete="name" />
+          </div>
+
+          <div class="form-group">
+            <label for="auth-email-input">Email Address</label>
+            <input type="email" id="auth-email-input" placeholder="you@example.com" autocomplete="email" required />
+          </div>
+
+          <div class="form-group">
+            <label for="auth-password-input">Password</label>
+            <input type="password" id="auth-password-input" placeholder="••••••••" autocomplete="current-password" required minlength="6" />
+          </div>
+
+          <div id="auth-error-alert" class="auth-error-alert hidden"></div>
+
+          <button type="submit" id="auth-submit-btn" class="btn-mint large full-width">Sign In</button>
+        </form>
+
+        <div class="auth-modal-footer text-center">
+          <span id="auth-toggle-prompt">Don't have an account?</span>
+          <button type="button" id="auth-toggle-mode-btn" class="link-btn">Create an account</button>
+        </div>
+      </div>
     </div>
 
     <!-- Loading Overlay -->
@@ -282,6 +441,15 @@
     </div>
   </div>
 
-  <script src="app.js"></script>
+  <!-- Markdown Parser (Local with CDN fallback) -->
+  <script src="vendor/marked.min.js"></script>
+  <script>
+    if (typeof marked === 'undefined') {
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/marked@15.0.12/marked.min.js';
+      document.head.appendChild(s);
+    }
+  </script>
+  <script type="module" src="app.js"></script>
 </body>
 </html>
