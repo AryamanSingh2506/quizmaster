@@ -1,8 +1,12 @@
 # Dependencies
 node_modules/
 
-# Environment variables
+# Environment variables & secrets (NEVER commit to version control)
 .env
+.env.*
+!.env.example
+*.env
+firebase-config.local.js
 
 # Logs
 logs
