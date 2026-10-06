@@ -1,6 +1,6 @@
 # 🎓 Gemini Study Buddy
 
-An AI-powered study assistant built with Google's Gemini API. Learn to integrate AI into your applications through hands-on checkpoints.
+An AI-powered study assistant built with Google's Gemini API. Learn to integrate AI into your applications through checkpoints.
 
 ## 🚀 Quick Start
 
