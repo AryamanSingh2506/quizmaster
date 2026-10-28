@@ -6,7 +6,7 @@ Features a multi-turn AI study tutor, cloud-synced study notes organizer, a time
 
 ---
 
-## 🌟 Key Features
+## 🌟 Key Features :
 
 ### 💬 1. AI Study Chat
 - **Intelligent Study Companion**: Powered by Google Gemini with custom persona instructions designed to break down complex topics into digestible explanations.
