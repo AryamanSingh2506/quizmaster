@@ -1,5 +1,4 @@
 # 🎓 Gemini Study Buddy & Quiz Master ⚡
-
 An intelligent, full-stack AI study platform and interactive challenge application built with **Google Gemini API**, **Firebase (Authentication & Cloud Firestore)**, and **Node.js / Express**.
 
 Features a multi-turn AI study tutor, cloud-synced study notes organizer, a timed 15-second Quiz Master with structured question generation, a real-time global leaderboard, and strict API key security.
@@ -127,7 +126,7 @@ quizmaster/
 ### Step 1: Clone the Repository
 ```bash
 git clone <your-repository-url>
-cd quizmaster-main
+cd quizmaster
 ```
 
 ---
